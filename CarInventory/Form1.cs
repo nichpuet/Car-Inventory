@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace CarInventory
 {
@@ -16,6 +17,8 @@ namespace CarInventory
         public Form1()
         {
             InitializeComponent();
+            loadDB();
+            displayItems();
         }
 
         private void addButton_Click(object sender, EventArgs e)
@@ -70,7 +73,60 @@ namespace CarInventory
 
         private void exitButton_Click(object sender, EventArgs e)
         {
+            saveDB();
             Application.Exit();
+        }
+
+        public void saveDB()
+        {
+            XmlWriter writer = XmlWriter.Create("Resources/CarData.xml", null);
+
+            writer.WriteStartElement("Inventory");
+
+            foreach (Car c in inventory)
+            {
+                writer.WriteStartElement("Car");
+
+                writer.WriteElementString("year", c.year);
+                writer.WriteElementString("make", c.make);
+                writer.WriteElementString("colour", c.colour);
+                writer.WriteElementString("mileage", c.mileage);
+
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+
+            writer.Close();
+        }
+
+        public void loadDB()
+        {
+            string newYear, newMake, newColour, newMileage;
+            XmlTextReader reader = new XmlTextReader("resources/CarData.xml");
+
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Text)
+                {
+                    newYear = reader.ReadString();
+
+                    reader.ReadToNextSibling("make");
+
+                    newMake = reader.ReadString();
+
+                    reader.ReadToNextSibling("colour");
+
+                    newColour = reader.ReadString();
+
+                    reader.ReadToNextSibling("mileage");
+
+                    newMileage = reader.ReadString();
+
+                    Car newCar = new Car(newYear, newMake, newColour, newMileage);
+                    inventory.Add(newCar);
+                }                
+            }
+            reader.Close();
         }
     }
 }
